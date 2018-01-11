@@ -1,0 +1,6 @@
+*~
+__pycache__
+*.npy
+*.h5y
+*.png
+*.ipynb
