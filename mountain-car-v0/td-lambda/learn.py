@@ -17,7 +17,7 @@ MAX_EXPLORATION_RATE = 0.2
 MIN_EXPLORATION_RATE = 0.005
 
 
-class SarsaAgent:
+class TDLambdaAgent:
     def __init__(self, q_table, learning_rate, discount, exploration_rate):
         self.q_table = q_table
         self.s_table = np.zeros(q_table.shape)
@@ -85,7 +85,7 @@ def learn(env, q_table, episodes):
         exploration_rate = MAX_EXPLORATION_RATE * math.pow(exploration_ratio, progress)
 
         progress = episode / episodes
-        agent = SarsaAgent(q_table, LEARNING_RATE, DISCOUNT, exploration_rate)
+        agent = TDLambdaAgent(q_table, LEARNING_RATE, DISCOUNT, exploration_rate)
         steps.append(learn_episode(env, agent))
 
         if steps[-1] < MAX_STEPS:
