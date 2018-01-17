@@ -13,7 +13,7 @@ from utils import *
 
 MIN_EXPLORATION_RATE = 0.01 * 1 / 200
 MAX_EXPLORATION_RATE = 1.0
-DISCOUNT = 0.99
+DISCOUNT = 1.0
 
 HIDDEN_LAYER = 64
 
@@ -23,6 +23,8 @@ EPISODES_SKIP = 100
 
 MEMORY_SIZE = 100000
 BATCH_SIZE = 32
+
+STEPS_TO_WIN = 100
 
 
 class DQNAgent:
@@ -55,7 +57,7 @@ class DQNAgent:
                                        shape=[None, actions_dim],
                                        name='q_actual')
 
-        loss = tf.reduce_mean(tf.squared_difference(self.q_pred, self.q_actual))
+        loss = tf.losses.mean_squared_error(self.q_pred, self.q_actual)
         optimizer = tf.train.AdamOptimizer(self.learning_rate)
         self.train_op = optimizer.minimize(loss)
 
@@ -128,15 +130,16 @@ def learn(episodes, model_path, sess):
 
     best = 200
     start_time = time.time()
+    scores = []
     for episode in range(episodes):
         progress = episode / episodes
         agent.exploration_rate = exploration_rate
         exploration_rate = MAX_EXPLORATION_RATE * math.pow(exploration_ratio, progress)
         learning_rate = LEARNING_RATE * math.pow(LEARNING_RATE_DECAY, episode / EPISODES_SKIP)
         steps = learn_episode(env, agent, learning_rate, sess)
-        best = min(best, steps)
+        scores.append(steps)
         time_elapsed = time.time() - start_time
-        print('After {}/{} episodes: {}, best: {}, eps: {:.3f}, lr: {:.5f}, elapsed: {} secs'.format(episode + 1, episodes, steps, best, exploration_rate, learning_rate, int(time_elapsed)))
+        print('After {}/{} episodes: {}, mean: {}, eps: {:.3f}, lr: {:.5f}, elapsed: {} secs'.format(episode + 1,episodes, steps, np.mean(scores[-STEPS_TO_WIN:]), exploration_rate, learning_rate, int(time_elapsed)))
         if (episode + 1) % 1000 == 0:
             save_dqn(1000, Model(agent, sess), 'after-{}-episodes.png'.format(episode + 1))
 
