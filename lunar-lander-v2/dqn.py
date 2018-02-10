@@ -12,7 +12,7 @@ class DQN:
 
             self.q_current = self.state
 
-            self.ws = []
+            self.Ws = []
             self.bs = []
             hidden_layers += 1
             for i in range(hidden_layers):
@@ -25,7 +25,7 @@ class DQN:
                 b = tf.get_variable(name='b{}'.format(i),
                                     shape=[output_dim],
                                     initializer=xavier_initializer())
-                self.ws.append(W)
+                self.Ws.append(W)
                 self.bs.append(b)
 
                 self.q_current = tf.matmul(self.q_current, W) + b
@@ -48,8 +48,8 @@ class DQN:
 
     def copy_to(self, rhs, sess):
         ops = []
-        for (wl, wr) in zip(self.ws, rhs.ws):
-            ops.append(tf.assign(wr, wl))
+        for (Wl, Wr) in zip(self.Ws, rhs.Ws):
+            ops.append(tf.assign(Wr, Wl))
         for (bl, br) in zip(self.bs, rhs.bs):
             ops.append(tf.assign(br, bl))
         sess.run(ops)

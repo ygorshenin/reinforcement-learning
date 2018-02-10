@@ -15,15 +15,18 @@ class Env:
 
     def __init__(self, render):
         self._env = gym.make('LunarLander-v2')
-        if render:
-            self._env = gym.wrappers.Monitor(self._env, 'videos', video_callable=lambda episode_id: episode_id % 100 == 0)
+        self.render = render
 
     def reset(self):
         state = self._env.reset()
+        if self.render:
+            self._env.render()
         return self._normalize_state(state)
 
     def step(self, action):
         state, reward, done, _ = self._env.step(action)
+        if self.render:
+            self._env.render()
         return self._normalize_state(state), reward, done
 
     @staticmethod
