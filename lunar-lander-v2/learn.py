@@ -8,8 +8,8 @@ import random
 import sys
 import tensorflow as tf
 
-from env import *
 from dqn import DQN
+from env import *
 
 
 # All episodes are finite, there is no need in discount
@@ -33,6 +33,7 @@ MEAN_REWARD_TO_WIN = 200
 
 STEPS_TO_TRAIN = 4
 STEPS_TO_COPY = 10 * 1000
+EPISODES_TO_SAVE = 100
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -57,6 +58,7 @@ class Agent:
 
     def on_reward(self, s, a, r, s_, done):
         self.memory.append([s, a, r, s_, done])
+
         self.step += 1
         if self.step % STEPS_TO_TRAIN == 0:
             self._train()
@@ -65,23 +67,26 @@ class Agent:
 
     def _train(self):
         n = min(len(self.memory), BATCH_SIZE)
-        sample = random.sample(self.memory, n)
+
+        samples = random.sample(self.memory, n)
 
         ss, ss_ = [], []
-        for [s, a, r, s_, done] in sample:
+        for [s, a, r, s_, done] in samples:
             ss.append(s)
             ss_.append(s_)
+
         ss, ss_ = np.array(ss), np.array(ss_)
 
         qs = self._predict_online(ss)
         qs_ = self._predict_online(ss_)
         ts_ = self._predict_target(ss_)
 
-        for i, [s, a, r, s_, done] in enumerate(sample):
+        for i, [s, a, r, s_, done] in enumerate(samples):
             reward = r
             if not done:
                 reward += DISCOUNT * ts_[i][np.argmax(qs_[i])]
             qs[i][a] = reward
+
         self.dqn_online.train(ss, qs, LEARNING_RATE, self.sess)
 
     def _copy(self):
@@ -125,26 +130,53 @@ def learn_episode(agent, env):
 
 def learn(args):
     with tf.Session() as sess:
-
         agent = Agent(sess)
         env = Env(render=args.render)
 
         sess.run(tf.global_variables_initializer())
 
+        writer = tf.summary.FileWriter(args.summary, sess.graph)
+        saver = tf.train.Saver()
+
         rewards = []
+        solved = False
         for episode in range(args.episodes):
-            logger.info('Learning episode {}...'.format(episode))
             steps, reward = learn_episode(agent, env)
-            logger.info('Steps: {}, reward: {}'.format(steps, reward))
             rewards.append(reward)
-            logger.info('Running mean: {:.2f}'.format(np.mean(rewards[-EPISODES_TO_WIN:])))
+            mean = np.mean(rewards[-EPISODES_TO_WIN:])
+
+            summary = tf.Summary(value=[tf.Summary.Value(tag='running mean', simple_value=mean),
+                                        tf.Summary.Value(tag='reward', simple_value=reward)])
+            writer.add_summary(summary)
+
+            logger.info('Episode {}: steps: {}, reward: {:.2f}, running mean: {:.2f}'.format(
+                episode, steps, reward, mean))
+
+            if episode % EPISODES_TO_SAVE == 0:
+                path = saver.save(sess, args.model)
+                logger.info('Model saved to {}'.format(path))
+
+            if mean >= MEAN_REWARD_TO_WIN:
+                logger.info('Solved!')
+                solved = True
+                break
+
+        if not solved:
+            logger.info('Not solved :(')
+
+        path = saver.save(sess, args.model)
+        logger.info('Model saved to {}'.format(path))
 
 
 if __name__ == '__main__':
     argparse = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    argparse.add_argument('--episodes', type=int, default=1000,
+    argparse.add_argument('--episodes', type=int, default=20000,
                           help='number of episodes')
     argparse.add_argument('--render', default=False, action='store_true',
                           help='render learning process')
+    argparse.add_argument('--summary', type=str, default='/tmp/lunar-lander',
+                          help='path to save summary')
+    argparse.add_argument('--model', type=str, default='model.ckpt',
+                          help='path to save model')
     args = argparse.parse_args()
     learn(args)

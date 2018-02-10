@@ -9,6 +9,7 @@ class DQN:
             self.learning_rate = tf.placeholder(tf.float32, name='learning_rate')
 
             self.state = tf.placeholder(tf.float32, shape=[None, states_dim], name='state')
+
             self.q_current = self.state
 
             self.ws = []
