@@ -24,6 +24,7 @@ EPISODES_TO_SAVE = 100
 
 logging.basicConfig(logging.INFO)
 logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 def learn_episode(agent, env):
