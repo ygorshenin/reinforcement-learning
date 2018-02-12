@@ -4,6 +4,9 @@ from tensorflow.contrib.layers import xavier_initializer
 
 
 class DQN:
+    """Deep Q-network, same number of hidden units on all hidden
+       layers, with tanh non-linearities between layers.
+    """
     def __init__(self, name, states_dim, actions_dim, hidden_layers, hidden_units):
         with tf.variable_scope(name):
             self.learning_rate = tf.placeholder(tf.float32, name='learning_rate')

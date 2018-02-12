@@ -6,6 +6,7 @@ import tensorflow as tf
 
 from agent import Agent
 from env import *
+from schedule import ConstSchedule
 
 
 logger = logging.getLogger()
@@ -26,7 +27,10 @@ def visualize_episode(agent, env):
 
 def visualize(args):
     with tf.Session() as sess:
-        agent = Agent(sess)
+        eps_schedule = ConstSchedule(T=0)
+        lr_schedule = None
+
+        agent = Agent(sess, eps_schedule, lr_schedule)
         env = Env(render=True)
 
         sess.run(tf.global_variables_initializer())

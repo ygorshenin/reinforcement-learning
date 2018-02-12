@@ -7,7 +7,7 @@ ACTIONS_DIM = 4
 
 
 class Env:
-    """Env wrapper for LunarLander-v2 discrete.
+    """Env wrapper for LunarLander-v2 discrete version.
 
        State: unknown
        Actions: [nope, main engine, left engine, right engine]

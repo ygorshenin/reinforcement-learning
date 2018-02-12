@@ -8,6 +8,14 @@ import tensorflow as tf
 from agent import Agent
 from dqn import DQN
 from env import Env
+from schedule import LogSchedule
+
+
+DEFAULT_MAX_LR = 1e-3
+DEFAULT_MIN_LR = 1e-6
+
+DEFAULT_MAX_EPS = 1
+DEFAULT_MIN_EPS = 1e-4
 
 
 EPISODES_TO_WIN = 100
@@ -42,7 +50,10 @@ def learn_episode(agent, env):
 
 def learn(args):
     with tf.Session() as sess:
-        agent = Agent(sess)
+        eps_schedule = LogSchedule(maxT=args.max_eps, minT=args.min_eps)
+        lr_schedule = LogSchedule(maxT=args.max_lr, minT=args.min_lr)
+
+        agent = Agent(sess, eps_schedule, lr_schedule)
         env = Env(render=args.render)
 
         sess.run(tf.global_variables_initializer())
@@ -53,6 +64,10 @@ def learn(args):
         rewards = []
         solved = False
         for episode in range(args.episodes):
+            progress = episode / args.episodes
+            eps_schedule.on_progress(progress)
+            lr_schedule.on_progress(progress)
+
             steps, reward = learn_episode(agent, env)
             rewards.append(reward)
             mean = np.mean(rewards[-EPISODES_TO_WIN:])
@@ -92,5 +107,15 @@ if __name__ == '__main__':
                           help='path to save summary')
     argparse.add_argument('--model', type=str, default='model.ckpt',
                           help='path to save model')
+
+    argparse.add_argument('--max_lr', type=float, default=DEFAULT_MAX_LR,
+                          help='maximum learning rate')
+    argparse.add_argument('--min_lr', type=float, default=DEFAULT_MIN_LR,
+                          help='minimum learning rate')
+    argparse.add_argument('--max_eps', type=float, default=DEFAULT_MAX_EPS,
+                          help='maximum probability of exploration')
+    argparse.add_argument('--min_eps', type=float, default=DEFAULT_MIN_EPS,
+                          help='minimum probability of exploration')
+
     args = argparse.parse_args()
     learn(args)

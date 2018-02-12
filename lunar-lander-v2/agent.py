@@ -5,10 +5,6 @@ from dqn import DQN
 from env import *
 
 
-# Probability of explorative actions.
-EPS = 0.1
-# Learning rate for gradient descent.
-LEARNING_RATE = 0.0001
 # Maximum number of last experience entries.
 MEMORY_SIZE = 1000 * 1000
 # Number of experience entries used to update model.
@@ -23,18 +19,19 @@ HIDDEN_UNITS=64
 
 
 class Agent:
-    def __init__(self, sess, eps=EPS):
+    def __init__(self, sess, eps_schedule, lr_schedule):
         self.dqn_online = Agent._make_dqn('online')
         self.dqn_target = Agent._make_dqn('target')
 
         self.sess = sess
-        self.eps = 0
+        self.eps_schedule = eps_schedule
+        self.lr_schedule = lr_schedule
         self.memory = collections.deque(maxlen=MEMORY_SIZE)
 
         self.step = 0
 
     def get_action(self, s):
-        if random.random() < self.eps:
+        if random.random() < self.eps_schedule.get():
             return random.randint(0, ACTIONS_DIM - 1)
         qs = self.dqn_online.predict(np.array([s]), self.sess)
         a = np.argmax(qs)
@@ -73,7 +70,7 @@ class Agent:
                 reward += ts_[i][np.argmax(qs_[i])]
             qs[i][a] = reward
 
-        self.dqn_online.train(ss, qs, LEARNING_RATE, self.sess)
+        self.dqn_online.train(ss, qs, self.lr_schedule.get(), self.sess)
 
     def _copy(self):
         return self.dqn_online.copy_to(self.dqn_target, self.sess)
