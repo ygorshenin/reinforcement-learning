@@ -12,6 +12,7 @@ class DQN:
             self.learning_rate = tf.placeholder(tf.float32, name='learning_rate')
 
             self.state = tf.placeholder(tf.float32, shape=[None, states_dim], name='state')
+            self.weights = tf.placeholder(tf.float32, shape=[None, 1], name='state')
 
             self.q_current = self.state
 
@@ -38,11 +39,14 @@ class DQN:
             self.q_target = tf.placeholder(tf.float32, shape=[None, actions_dim], name='q_target')
 
             optimizer = tf.train.RMSPropOptimizer(self.learning_rate)
-            self.loss = tf.losses.mean_squared_error(self.q_current, self.q_target)
+            self.loss = tf.square(self.q_current - self.q_target)
+            self.loss = tf.multiply(self.loss, self.weights)
+            self.loss = tf.reduce_sum(self.loss)
+            # self.loss = tf.losses.mean_squared_error(self.q_current, self.q_target)
             self.train_op = optimizer.minimize(self.loss)
 
-    def train(self, ss, qs, lr, sess):
-        feed_dict = {self.state: ss, self.q_target: qs, self.learning_rate: lr}
+    def train(self, ss, qs, ws, lr, sess):
+        feed_dict = {self.state: ss, self.q_target: qs, self.weights: ws, self.learning_rate: lr}
         return sess.run(self.train_op, feed_dict=feed_dict)
 
     def predict(self, ss, sess):

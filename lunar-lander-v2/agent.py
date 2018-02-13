@@ -1,10 +1,10 @@
-import collections
 import random
 
 from dqn import DQN
 from env import *
+from memory import Memory
 
-
+MAX_WEIGHT = 1000 * 1000
 # Maximum number of last experience entries.
 MEMORY_SIZE = 1000 * 1000
 # Number of experience entries used to update model.
@@ -26,7 +26,7 @@ class Agent:
         self.sess = sess
         self.eps_schedule = eps_schedule
         self.lr_schedule = lr_schedule
-        self.memory = collections.deque(maxlen=MEMORY_SIZE)
+        self.memory = Memory(MEMORY_SIZE)
 
         self.step = 0
 
@@ -38,7 +38,7 @@ class Agent:
         return a
 
     def on_reward(self, s, a, r, s_, done):
-        self.memory.append([s, a, r, s_, done])
+        self.memory.append([s, a, r, s_, done], MAX_WEIGHT)
 
         self.step += 1
         if self.step % STEPS_TO_TRAIN == 0:
@@ -47,14 +47,14 @@ class Agent:
             self._copy()
 
     def _train(self):
-        n = min(len(self.memory), BATCH_SIZE)
+        n = min(self.memory.size, BATCH_SIZE)
+        samples = self.memory.sample_n(n)
 
-        samples = random.sample(self.memory, n)
-
-        ss, ss_ = [], []
-        for [s, a, r, s_, done] in samples:
+        ss, ss_, ws = [], [], []
+        for ([s, a, r, s_, done], i, w) in samples:
             ss.append(s)
             ss_.append(s_)
+            ws.append([w])
 
         ss, ss_ = np.array(ss), np.array(ss_)
 
@@ -62,15 +62,23 @@ class Agent:
         qs_ = self._predict_online(ss_)
         ts_ = self._predict_target(ss_)
 
-        for i, [s, a, r, s_, done] in enumerate(samples):
+        ds = []
+        for i, ([s, a, r, s_, done], _, _) in enumerate(samples):
             reward = r
 
             # There's no need to discount future.
             if not done:
                 reward += ts_[i][np.argmax(qs_[i])]
+
+            delta = abs(reward - qs[i][a]) + 0.001
+            ds.append(delta)
+
             qs[i][a] = reward
 
-        self.dqn_online.train(ss, qs, self.lr_schedule.get(), self.sess)
+        for i, (_, j, _) in enumerate(samples):
+            self.memory.set_delta(j, ds[i])
+
+        self.dqn_online.train(ss, qs, ws, self.lr_schedule.get(), self.sess)
 
     def _copy(self):
         return self.dqn_online.copy_to(self.dqn_target, self.sess)

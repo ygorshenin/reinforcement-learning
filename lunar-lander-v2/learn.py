@@ -22,7 +22,7 @@ EPISODES_TO_WIN = 100
 MEAN_REWARD_TO_WIN = 200
 EPISODES_TO_SAVE = 100
 
-logging.basicConfig(logging.INFO)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
