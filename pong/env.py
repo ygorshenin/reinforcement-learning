@@ -2,6 +2,8 @@ import gym
 import numpy as np
 
 
+MAX_FRAMES = 4
+
 _MIN_ROW = 33
 _MAX_ROW = 194
 
@@ -36,7 +38,7 @@ class Env:
         return self.state, reward, done
 
     @staticmethod
-    def actions_shape():
+    def actions_dim():
         return 2
 
     @staticmethod
