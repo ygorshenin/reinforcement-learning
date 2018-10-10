@@ -1,10 +1,6 @@
 import gym
 import numpy as np
 
-from collections import deque
-
-
-MAX_FRAMES = 4
 
 _MIN_ROW = 33
 _MAX_ROW = 194
@@ -23,14 +19,17 @@ class Env:
         frame = Env._normalize_frame(frame)
         if self.render:
             self.env.render()
-        self.state = np.vstack([frame, frame, frame, frame])
+
+        self.f0, self.f1, self.f2, self.f3 = frame, frame, frame, frame
+        self.state = np.vstack([self.f0, self.f1, self.f2, self.f3])
         return self.state
 
     def step(self, action):
         frame, reward, done, _ = self.env.step(2 + action)
         frame = Env._normalize_frame(frame)
-        self.state = np.vstack([frame, self.state])
-        self.state = self.state[:MAX_FRAMES * (_MAX_ROW - _MIN_ROW), :, :]
+
+        self.f0, self.f1, self.f2, self.f3 = self.f1, self.f2, self.f3, frame
+        self.state = np.vstack([self.f0, self.f1, self.f2, self.f3])
 
         if self.render:
             self.env.render()
