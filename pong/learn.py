@@ -43,7 +43,7 @@ def train_on_memory(sess, dqn, memory):
         if not ds[i]:
             r += DISCOUNT * np.max(qs_[i])
         qs[i][a] = r
-    dqn.train_on_batch(sess, ss, qs, lr=0.001)
+    dqn.train_on_batch(sess, ss, qs, lr=0.0001)
 
 
 def train_on_episode(sess, env, agent, dqn, memory):
@@ -66,7 +66,7 @@ def train_on_episode(sess, env, agent, dqn, memory):
             if r > 0:
                 print('Win :)')
             else:
-                print('Loose :(')
+                print('Lose :(')
 
             print('Training on memory...')
             train_on_memory(sess, dqn, memory)

@@ -38,7 +38,7 @@ def go(args):
         saver = tf.train.Saver()
         saver.restore(sess, args.model_path)
 
-        env = Env(render=False)
+        env = Env(render=True)
 
         visualize_episodes(sess, env, agent)
             
