@@ -67,7 +67,11 @@ def train_on_episode(sess, env, dqn, memory):
 
 
 def train_on_episodes(args):
-    with tf.Session() as sess:
+    config = tf.ConfigProto()
+    config.intra_op_parallelism_threads = 1
+    config.inter_op_parallelism_threads = 1
+
+    with tf.Session(config=config) as sess:
         dqn = DQN(input_shape=Env.observations_shape(), output_dim=Env.actions_dim())
         sess.run(tf.global_variables_initializer())
 

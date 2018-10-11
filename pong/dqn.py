@@ -16,7 +16,7 @@ class DQN:
         b_conv_1 = tf.Variable(tf.constant(0.0, shape=[10]))
 
         conv_1 = tf.nn.conv2d(self.ss, W_conv_1, strides=[1, 1, 1, 1], padding="SAME", data_format="NHWC")
-        h_conv_1 = tf.nn.relu(conv_1)
+        h_conv_1 = tf.nn.tanh(conv_1)
 
         num_hidden_1 = 1
         for dim in h_conv_1.shape[1:]:
@@ -28,7 +28,7 @@ class DQN:
 
         W_2 = tf.Variable(tf.truncated_normal([num_hidden_1, num_hidden_2], stddev=0.1))
         b_2 = tf.Variable(tf.constant(0.0, shape=[num_hidden_2]))
-        h_2 = tf.nn.relu(tf.matmul(flatten, W_2) + b_2)
+        h_2 = tf.nn.tanh(tf.matmul(flatten, W_2) + b_2)
 
         W_3 = tf.Variable(tf.truncated_normal([num_hidden_2, output_dim], stddev=0.1))
         b_3 = tf.Variable(tf.constant(0.0, shape=[output_dim]))
