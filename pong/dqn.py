@@ -12,7 +12,7 @@ class DQN:
         self.qs_target = tf.placeholder(tf.float32, [None, output_dim])
         self.lr = tf.placeholder(tf.float32)
 
-        W_conv_1 = tf.Variable(tf.truncated_normal([5, 5, 1, 10], stddev=0.1))
+        W_conv_1 = tf.Variable(tf.truncated_normal([5, 5, 1, 10], stddev=1))
         b_conv_1 = tf.Variable(tf.constant(0.0, shape=[10]))
 
         conv_1 = tf.nn.conv2d(self.ss, W_conv_1, strides=[1, 1, 1, 1], padding="SAME", data_format="NHWC")
@@ -26,11 +26,11 @@ class DQN:
 
         num_hidden_2 = 50
 
-        W_2 = tf.Variable(tf.truncated_normal([num_hidden_1, num_hidden_2], stddev=0.1))
+        W_2 = tf.Variable(tf.truncated_normal([num_hidden_1, num_hidden_2], stddev=1))
         b_2 = tf.Variable(tf.constant(0.0, shape=[num_hidden_2]))
         h_2 = tf.nn.tanh(tf.matmul(flatten, W_2) + b_2)
 
-        W_3 = tf.Variable(tf.truncated_normal([num_hidden_2, output_dim], stddev=0.1))
+        W_3 = tf.Variable(tf.truncated_normal([num_hidden_2, output_dim], stddev=1))
         b_3 = tf.Variable(tf.constant(0.0, shape=[output_dim]))
 
         self.qs_predict = tf.matmul(h_2, W_3) + b_3

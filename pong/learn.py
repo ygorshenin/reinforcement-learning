@@ -40,9 +40,8 @@ def train_on_memory(sess, dqn, memory):
 
 
 def train_on_episode(sess, env, dqn, memory):
-    reward = 0
-
     s = env.reset()
+    reward = 0
 
     while True:
         qs = dqn.predict(sess, s)
@@ -51,9 +50,10 @@ def train_on_episode(sess, env, dqn, memory):
         s_, r, done = env.step(a)
 
         memory.append(np.array([s, a, s_, r, done]))
+        s = s_
         reward += r
 
-        if r > 1e-9:
+        if r > 0.5:
             print('Win!')
 
         if abs(r) > 1e-9:

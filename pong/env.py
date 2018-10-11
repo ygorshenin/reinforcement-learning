@@ -2,13 +2,15 @@ import gym
 import numpy as np
 
 
-MAX_FRAMES = 4
+MAX_FRAMES = 2
 
-_MIN_ROW = 33
-_MAX_ROW = 194
+MIN_ROW = 33
+MAX_ROW = 194
+NROWS = MAX_ROW - MIN_ROW
 
-_MIN_COL = 0
-_MAX_COL = 160
+MIN_COL = 0
+MAX_COL = 160
+NCOLS = MAX_COL - MIN_COL
 
 
 class Env:
@@ -22,16 +24,16 @@ class Env:
         if self.render:
             self.env.render()
 
-        self.f0, self.f1, self.f2, self.f3 = frame, frame, frame, frame
-        self.state = np.vstack([self.f0, self.f1, self.f2, self.f3])
+        self.f0, self.f1 = frame, frame
+        self.state = np.vstack([self.f0, self.f1])
         return self.state
 
     def step(self, action):
         frame, reward, done, _ = self.env.step(2 + action)
         frame = Env._normalize_frame(frame)
 
-        self.f0, self.f1, self.f2, self.f3 = self.f1, self.f2, self.f3, frame
-        self.state = np.vstack([self.f0, self.f1, self.f2, self.f3])
+        self.f0, self.f1 = self.f1, frame
+        self.state = np.vstack([self.f0, self.f1])
 
         if self.render:
             self.env.render()
@@ -43,9 +45,11 @@ class Env:
 
     @staticmethod
     def observations_shape():
-        return (MAX_FRAMES * (_MAX_ROW - _MIN_ROW), _MAX_COL - _MIN_COL, 1)
+        return (MAX_FRAMES * NROWS, NCOLS, 1)
 
     @staticmethod
     def _normalize_frame(frame):
-        frame = frame[_MIN_ROW:_MAX_ROW, :, 0:1] / 255
-        return frame
+        frame = frame[MIN_ROW:MAX_ROW, :, 0]
+        frame[frame == 144] = 0
+        frame[frame != 0] = 1
+        return frame.reshape([NROWS, NCOLS, 1])
