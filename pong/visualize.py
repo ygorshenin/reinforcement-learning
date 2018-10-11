@@ -9,6 +9,9 @@ from env import Env
 from dqn import DQN
 
 
+EPS = 0.1
+
+
 def visualize_episode(sess, env, dqn):
     s = env.reset()
     time.sleep(0.02)
@@ -16,6 +19,8 @@ def visualize_episode(sess, env, dqn):
     while True:
         qs = dqn.predict(sess, s)
         a = np.argmax(qs)
+        if np.random.random() < EPS:
+            a = np.random.randint(Env.actions_dim())
         s, _, done = env.step(a)
         time.sleep(0.02)
         if done:

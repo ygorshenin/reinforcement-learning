@@ -10,6 +10,8 @@ import time
 from dqn import DQN
 from env import Env
 
+EPS = 0.1
+
 MEMORY_SIZE = 100000
 BATCH_SIZE = 250
 REWARD_DECAY = 0.9
@@ -36,7 +38,7 @@ def train_on_memory(sess, dqn, memory):
     qs, qs_ = dqn.predict_on_batch(sess, ss), dqn.predict_on_batch(sess, ss_)
     for i in range(n):
         a = as_[i]
-        qs[a] = rs[i] + np.max(qs_[i])
+        qs[i][a] = rs[i] + np.max(qs_[i])
     dqn.train_on_batch(sess, ss, qs, lr=0.001)
 
 
@@ -47,6 +49,8 @@ def train_on_episode(sess, env, dqn, memory):
     while True:
         qs = dqn.predict(sess, s)
         a = np.argmax(qs)
+        if np.random.random() < EPS:
+            a = np.random.randint(Env.actions_dim())
 
         s_, r, done = env.step(a)
         memory.append(np.array([s, a, s_, r, done]))
