@@ -14,6 +14,7 @@ MEMORY_SIZE = 100000
 BATCH_SIZE = 250
 REWARD_DECAY = 0.9
 EPISODES_TO_TRAIN = 1
+DISCOUNT = 0.9
 
 
 def train_on_memory(sess, dqn, memory):
@@ -48,15 +49,14 @@ def train_on_episode(sess, env, dqn, memory):
         a = np.argmax(qs)
 
         s_, r, done = env.step(a)
-
         memory.append(np.array([s, a, s_, r, done]))
         s = s_
         reward += r
 
-        if r > 0.5:
-            print('Win!')
-
         if abs(r) > 1e-9:
+            if r > 0:
+                print('Win!')
+
             print('Training on memory:', r)
             train_on_memory(sess, dqn, memory)
 

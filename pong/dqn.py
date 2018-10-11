@@ -12,8 +12,12 @@ class DQN:
         self.qs_target = tf.placeholder(tf.float32, [None, output_dim])
         self.lr = tf.placeholder(tf.float32)
 
-        W_conv_1 = tf.Variable(tf.truncated_normal([5, 5, 1, 10], stddev=1))
-        b_conv_1 = tf.Variable(tf.constant(0.0, shape=[10]))
+        W_conv_1 = tf.get_variable("W_conv_1",
+                                   shape=[5, 5, 1, 10],
+                                   initializer=tf.contrib.layers.xavier_initializer())
+        b_conv_1 = tf.get_variable("b_conv_1",
+                                   shape=[10],
+                                   initializer=tf.zeros_initializer())
 
         conv_1 = tf.nn.conv2d(self.ss, W_conv_1, strides=[1, 1, 1, 1], padding="SAME", data_format="NHWC")
         h_conv_1 = tf.nn.tanh(conv_1)
@@ -26,12 +30,20 @@ class DQN:
 
         num_hidden_2 = 50
 
-        W_2 = tf.Variable(tf.truncated_normal([num_hidden_1, num_hidden_2], stddev=1))
-        b_2 = tf.Variable(tf.constant(0.0, shape=[num_hidden_2]))
+        W_2 = tf.get_variable("W_2",
+                              shape=[num_hidden_1, num_hidden_2],
+                              initializer=tf.contrib.layers.xavier_initializer())
+        b_2 = tf.get_variable("b_2",
+                              shape=[num_hidden_2],
+                              initializer=tf.zeros_initializer())
         h_2 = tf.nn.tanh(tf.matmul(flatten, W_2) + b_2)
 
-        W_3 = tf.Variable(tf.truncated_normal([num_hidden_2, output_dim], stddev=1))
-        b_3 = tf.Variable(tf.constant(0.0, shape=[output_dim]))
+        W_3 = tf.get_variable("W_3",
+                              shape=[num_hidden_2, output_dim],
+                              initializer=tf.contrib.layers.xavier_initializer())
+        b_3 = tf.get_variable("b_3",
+                              shape=[output_dim],
+                              initializer=tf.zeros_initializer())
 
         self.qs_predict = tf.matmul(h_2, W_3) + b_3
 
