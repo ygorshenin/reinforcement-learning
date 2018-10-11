@@ -7,10 +7,10 @@ import random
 import tensorflow as tf
 import time
 
+from agent import Agent
 from dqn import DQN
 from env import Env
 
-EPS = 0.1
 
 MEMORY_SIZE = 100000
 BATCH_SIZE = 250
@@ -23,12 +23,13 @@ def train_on_memory(sess, dqn, memory):
     n = min(len(memory), BATCH_SIZE)
     batch = np.array(random.sample(memory, n))
 
-    ss, as_, ss_, rs = [], [], [], []
-    for [s, a, s_, r, _] in batch:
+    ss, as_, ss_, rs, ds = [], [], [], [], []
+    for [s, a, r, s_, d] in batch:
         ss.append(s)
         as_.append(a)
         ss_.append(s_)
         rs.append(r)
+        ds.append(d)
 
     ss = np.array(ss)
     as_ = np.array(as_)
@@ -38,30 +39,36 @@ def train_on_memory(sess, dqn, memory):
     qs, qs_ = dqn.predict_on_batch(sess, ss), dqn.predict_on_batch(sess, ss_)
     for i in range(n):
         a = as_[i]
-        qs[i][a] = rs[i] + np.max(qs_[i])
+        r = rs[i]
+        if not ds[i]:
+            r += DISCOUNT * np.max(qs_[i])
+        qs[i][a] = r
     dqn.train_on_batch(sess, ss, qs, lr=0.001)
 
 
-def train_on_episode(sess, env, dqn, memory):
+def train_on_episode(sess, env, agent, dqn, memory):
     s = env.reset()
     reward = 0
 
     while True:
-        qs = dqn.predict(sess, s)
-        a = np.argmax(qs)
-        if np.random.random() < EPS:
-            a = np.random.randint(Env.actions_dim())
-
+        a = agent.get_action(sess, s)
         s_, r, done = env.step(a)
-        memory.append(np.array([s, a, s_, r, done]))
+
+        # This is pong-specific. We assume that s is a final state on
+        # each point win or loose.
+        d = abs(r) > 1e-9
+
+        memory.append(np.array([s, a, r, s_, d]))
         s = s_
         reward += r
 
-        if abs(r) > 1e-9:
+        if d:
             if r > 0:
-                print('Win!')
+                print('Win :)')
+            else:
+                print('Loose :(')
 
-            print('Training on memory:', r)
+            print('Training on memory...')
             train_on_memory(sess, dqn, memory)
 
         if done:
@@ -77,6 +84,7 @@ def train_on_episodes(args):
 
     with tf.Session(config=config) as sess:
         dqn = DQN(input_shape=Env.observations_shape(), output_dim=Env.actions_dim())
+        agent = Agent(dqn)
         sess.run(tf.global_variables_initializer())
 
         writer = tf.summary.FileWriter(args.summary, sess.graph)
@@ -92,7 +100,7 @@ def train_on_episodes(args):
 
         while True:
             episode += 1
-            r = train_on_episode(sess, env, dqn, memory)
+            r = train_on_episode(sess, env, agent, dqn, memory)
             reward += (r - reward) * REWARD_DECAY
 
             summary = tf.Summary(value=[tf.Summary.Value(tag='running mean', simple_value=reward),

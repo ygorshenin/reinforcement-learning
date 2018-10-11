@@ -13,10 +13,10 @@ class DQN:
         self.lr = tf.placeholder(tf.float32)
 
         W_conv_1 = tf.get_variable("W_conv_1",
-                                   shape=[5, 5, 1, 10],
+                                   shape=[5, 5, 1, 32],
                                    initializer=tf.contrib.layers.xavier_initializer())
         b_conv_1 = tf.get_variable("b_conv_1",
-                                   shape=[10],
+                                   shape=[32],
                                    initializer=tf.zeros_initializer())
 
         conv_1 = tf.nn.conv2d(self.ss, W_conv_1, strides=[1, 1, 1, 1], padding="SAME", data_format="NHWC")

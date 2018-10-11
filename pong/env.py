@@ -4,8 +4,8 @@ import numpy as np
 
 MAX_FRAMES = 2
 
-MIN_ROW = 33
-MAX_ROW = 194
+MIN_ROW = 34
+MAX_ROW = 193
 NROWS = MAX_ROW - MIN_ROW
 
 MIN_COL = 0
@@ -25,7 +25,7 @@ class Env:
             self.env.render()
 
         self.f0, self.f1 = frame, frame
-        self.state = np.vstack([self.f0, self.f1])
+        self.state = np.hstack([self.f0, self.f1])
         return self.state
 
     def step(self, action):
@@ -33,7 +33,7 @@ class Env:
         frame = Env._normalize_frame(frame)
 
         self.f0, self.f1 = self.f1, frame
-        self.state = np.vstack([self.f0, self.f1])
+        self.state = np.hstack([self.f0, self.f1])
 
         if self.render:
             self.env.render()
@@ -45,7 +45,7 @@ class Env:
 
     @staticmethod
     def observations_shape():
-        return (MAX_FRAMES * NROWS, NCOLS, 1)
+        return (NROWS, MAX_FRAMES * NCOLS, 1)
 
     @staticmethod
     def _normalize_frame(frame):
