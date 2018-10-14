@@ -5,43 +5,40 @@ import numpy as np
 import tensorflow as tf
 import time
 
+from ac import AC
 from env import Env
-from dqn import DQN
 
 
-EPS = 0.1
+DELAY_SEC = 0.02
 
 
-def visualize_episode(sess, env, dqn):
+def visualize_episode(sess, env, ac):
     s = env.reset()
-    time.sleep(0.02)
+    time.sleep(DELAY_SEC)
 
     while True:
-        qs = dqn.predict(sess, s)
-        a = np.argmax(qs)
-        if np.random.random() < EPS:
-            a = np.random.randint(Env.actions_dim())
-        s, _, done = env.step(a)
-        time.sleep(0.02)
+        a, p = ac.get_action_prob(sess, s)
+        s, r, done = env.step(a)
+        print(a, p, r, ac.get_value(sess, s))
+        time.sleep(DELAY_SEC)
         if done:
             break
 
 
-def visualize_episodes(sess, env, dqn):
+def visualize_episodes(sess, env, ac):
     while True:
-        visualize_episode(sess, env, dqn)
+        visualize_episode(sess, env, ac)
 
 
 def go(args):
     with tf.Session() as sess:
-        dqn = DQN(input_shape=Env.observations_shape(), output_dim=Env.actions_dim())
+        env = Env(render=True)
+        ac = AC()
 
         saver = tf.train.Saver()
         saver.restore(sess, args.model_path)
 
-        env = Env(render=True)
-
-        visualize_episodes(sess, env, dqn)
+        visualize_episodes(sess, env, ac)
             
 
 if __name__ == '__main__':

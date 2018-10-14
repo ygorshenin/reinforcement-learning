@@ -1,68 +1,30 @@
 #!/usr/bin/env python3
 
-from collections import deque
 import argparse
-import numpy as np
-import random
 import tensorflow as tf
-import time
 
-from dqn import DQN
+from ac import AC
 from env import Env
 
-EPS = 0.1
-
-MEMORY_SIZE = 100000
-BATCH_SIZE = 250
-REWARD_DECAY = 0.9
-EPISODES_TO_TRAIN = 1
-DISCOUNT = 0.9
+REWARD_DECAY = 0.99
 
 
-def train_on_memory(sess, dqn, memory):
-    n = min(len(memory), BATCH_SIZE)
-    batch = np.array(random.sample(memory, n))
-
-    ss, as_, ss_, rs = [], [], [], []
-    for [s, a, s_, r, _] in batch:
-        ss.append(s)
-        as_.append(a)
-        ss_.append(s_)
-        rs.append(r)
-
-    ss = np.array(ss)
-    as_ = np.array(as_)
-    ss_ = np.array(ss_)
-    rs = np.array(rs)
-
-    qs, qs_ = dqn.predict_on_batch(sess, ss), dqn.predict_on_batch(sess, ss_)
-    for i in range(n):
-        a = as_[i]
-        qs[i][a] = rs[i] + np.max(qs_[i])
-    dqn.train_on_batch(sess, ss, qs, lr=0.001)
-
-
-def train_on_episode(sess, env, dqn, memory):
+def train_on_episode(sess, env, ac):
     s = env.reset()
     reward = 0
 
     while True:
-        qs = dqn.predict(sess, s)
-        a = np.argmax(qs)
-        if np.random.random() < EPS:
-            a = np.random.randint(Env.actions_dim())
-
+        a, p = ac.get_action_prob(sess, s)
         s_, r, done = env.step(a)
-        memory.append(np.array([s, a, s_, r, done]))
+        d = abs(r) > 1e-5
+        ac.on_reward(s, a, p, r, s_, d)
         s = s_
-        reward += r
 
-        if abs(r) > 1e-9:
+        if d:
+            reward += r
             if r > 0:
-                print('Win!')
-
-            print('Training on memory:', r)
-            train_on_memory(sess, dqn, memory)
+                print('Win :)')
+            ac.train(sess, lr_policy=1e-3, lr_value=1e-3)
 
         if done:
             break
@@ -76,7 +38,9 @@ def train_on_episodes(args):
     config.inter_op_parallelism_threads = 1
 
     with tf.Session(config=config) as sess:
-        dqn = DQN(input_shape=Env.observations_shape(), output_dim=Env.actions_dim())
+        env = Env(render=False)
+        ac = AC()
+
         sess.run(tf.global_variables_initializer())
 
         writer = tf.summary.FileWriter(args.summary, sess.graph)
@@ -85,14 +49,11 @@ def train_on_episodes(args):
         if args.restore:
             saver.restore(sess, args.model_path)
 
-        env = Env()
-        memory = deque(maxlen=MEMORY_SIZE)
-
         reward, episode = 0, 0
 
         while True:
             episode += 1
-            r = train_on_episode(sess, env, dqn, memory)
+            r = train_on_episode(sess, env, ac)
             reward += (r - reward) * REWARD_DECAY
 
             summary = tf.Summary(value=[tf.Summary.Value(tag='running mean', simple_value=reward),
