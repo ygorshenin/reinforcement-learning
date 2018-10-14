@@ -45,11 +45,11 @@ class Env:
 
     @staticmethod
     def observations_shape():
-        return (NROWS, MAX_FRAMES * NCOLS)
+        return [NROWS, MAX_FRAMES * NCOLS, 1]
 
     @staticmethod
     def _normalize_frame(frame):
         frame = frame[MIN_ROW:MAX_ROW, :, 0]
         frame[frame == 144] = 0
         frame[frame != 0] = 1
-        return frame
+        return frame.reshape([NROWS, NCOLS, 1])

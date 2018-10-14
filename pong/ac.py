@@ -9,7 +9,7 @@ from value_dqn import ValueDQN
 
 MEMORY_SIZE = 100000
 BATCH_SIZE = 128
-EPS = 1e-3
+EPS = 1e-6
 DECAY = 0.9
 
 
