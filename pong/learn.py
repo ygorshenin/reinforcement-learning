@@ -6,6 +6,7 @@ import tensorflow as tf
 from ac import AC
 from env import Env
 
+
 REWARD_DECAY = 0.99
 
 
@@ -24,7 +25,9 @@ def train_on_episode(sess, env, ac):
             reward += r
             if r > 0:
                 print('Win :)')
-            ac.train(sess, lr_policy=1e-3, lr_value=1e-3)
+            else:
+                print('Loss :(')
+            ac.train(sess, lr_policy=1e-4, lr_value=1e-4)
 
         if done:
             break

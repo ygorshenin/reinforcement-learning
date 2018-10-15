@@ -10,8 +10,6 @@ from value_dqn import ValueDQN
 MEMORY_SIZE = 100000
 BATCH_SIZE = 128
 EPS = 1e-6
-DECAY = 0.9
-
 
 def clamp(value, low, high):
     if value < low:
@@ -54,7 +52,7 @@ class AC:
         for i, [s, a, p, r, _s, done] in enumerate(samples):
             reward = r
             if not done:
-                reward += DECAY * values_pred_[i]
+                reward += values_pred_[i]
             values[i][0] = reward
             if a == 1:
                 weights[i][0] = (reward - values_pred[i]) / clamp(p, EPS, 1 - EPS)
