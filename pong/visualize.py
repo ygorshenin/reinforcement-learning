@@ -33,7 +33,7 @@ def visualize_episodes(sess, env, ac):
 def go(args):
     with tf.Session() as sess:
         env = Env(render=True)
-        ac = AC()
+        ac = AC(discount=1)
 
         saver = tf.train.Saver()
         saver.restore(sess, args.model_path)

@@ -8,17 +8,17 @@ from env import Env
 
 
 REWARD_DECAY = 0.99
+DISCOUNT = 1
 
 
 def train_on_episode(sess, env, ac):
-    s = env.reset()
-    reward = 0
+    s, reward = env.reset(), 0
 
     while True:
-        a, p = ac.get_action_prob(sess, s)
+        a = ac.get_action(sess, s)
         s_, r, done = env.step(a)
         d = abs(r) > 1e-5
-        ac.on_reward(s, a, p, r, s_, d)
+        ac.on_reward(s, a, r, s_, d)
         s = s_
 
         if d:
@@ -27,7 +27,7 @@ def train_on_episode(sess, env, ac):
                 print('Win :)')
             else:
                 print('Loss :(')
-            ac.train(sess, lr_policy=1e-4, lr_value=1e-4)
+            ac.train(sess, lr_policy=1e-3, lr_value=1e-3)
 
         if done:
             break
@@ -42,11 +42,13 @@ def train_on_episodes(args):
 
     with tf.Session(config=config) as sess:
         env = Env(render=False)
-        ac = AC()
+        ac = AC(discount=DISCOUNT)
 
         sess.run(tf.global_variables_initializer())
 
         writer = tf.summary.FileWriter(args.summary, sess.graph)
+        ac.writer = writer
+
         saver = tf.train.Saver()
 
         if args.restore:

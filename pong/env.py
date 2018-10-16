@@ -7,11 +7,11 @@ MAX_FRAMES = 2
 
 MIN_ROW = 34
 MAX_ROW = 193
-NROWS = MAX_ROW - MIN_ROW
+NROWS = (MAX_ROW - MIN_ROW) // 2
 
 MIN_COL = 0
 MAX_COL = 160
-NCOLS = MAX_COL - MIN_COL
+NCOLS = (MAX_COL - MIN_COL) // 2
 
 
 class Env:
@@ -27,29 +27,31 @@ class Env:
             time.sleep(0.02)
 
         self.f0, self.f1 = frame, frame
-        self.state = np.hstack([self.f0, self.f1])
-
-        return self.state
+        return self.make_state()
 
     def step(self, action):
         frame, reward, done, _ = self.env.step(2 + action)
         frame = Env._normalize_frame(frame)
 
         self.f0, self.f1 = self.f1, frame
-        self.state = np.hstack([self.f0, self.f1])
+        state = self.make_state()
 
         if self.render:
             self.env.render()
             time.sleep(0.02)
-        return self.state, reward, done
+        return state, reward, done
 
     @staticmethod
     def observations_shape():
-        return [NROWS, MAX_FRAMES * NCOLS, 1]
+        return [1, 80, 160]
 
     @staticmethod
     def _normalize_frame(frame):
         frame = frame[MIN_ROW:MAX_ROW, :, 0]
         frame[frame == 144] = 0
         frame[frame != 0] = 1
-        return frame.reshape([NROWS, NCOLS, 1])
+        return frame[::2, ::2]
+
+    def make_state(self):
+        state = np.hstack([self.f0, self.f1])
+        return np.expand_dims(state, axis=0)
