@@ -30,9 +30,8 @@ def train_on_episode(sess, env, ac):
             else:
                 print('Lose :(')
 
-            norm = max(len(memory), 1)
             for row in reversed(memory):
-                row[2] = r / norm
+                row[2] = r
                 ac.on_reward(*row)
                 r *= DISCOUNT
 
