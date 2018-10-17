@@ -32,7 +32,7 @@ def visualize_episodes(sess, env, agent):
 
 def go(args):
     with tf.Session() as sess:
-        dqn = DQN(input_shape=Env.observations_shape(), output_dim=Env.actions_dim())
+        dqn = DQN(input_shape=Env.observations_shape())
         agent = Agent(dqn)
 
         saver = tf.train.Saver()

@@ -16,7 +16,7 @@ MEMORY_SIZE = 100000
 BATCH_SIZE = 250
 REWARD_DECAY = 0.9
 EPISODES_TO_TRAIN = 1
-DISCOUNT = 0.9
+DISCOUNT = 0.98
 
 
 def train_on_memory(sess, dqn, memory):
@@ -30,11 +30,6 @@ def train_on_memory(sess, dqn, memory):
         ss_.append(s_)
         rs.append(r)
         ds.append(d)
-
-    ss = np.array(ss)
-    as_ = np.array(as_)
-    ss_ = np.array(ss_)
-    rs = np.array(rs)
 
     qs, qs_ = dqn.predict_on_batch(sess, ss), dqn.predict_on_batch(sess, ss_)
     for i in range(n):
@@ -68,7 +63,6 @@ def train_on_episode(sess, env, agent, dqn, memory):
             else:
                 print('Lose :(')
 
-            print('Training on memory...')
             train_on_memory(sess, dqn, memory)
 
         if done:
@@ -83,7 +77,7 @@ def train_on_episodes(args):
     config.inter_op_parallelism_threads = 1
 
     with tf.Session(config=config) as sess:
-        dqn = DQN(input_shape=Env.observations_shape(), output_dim=Env.actions_dim())
+        dqn = DQN(input_shape=Env.observations_shape())
         agent = Agent(dqn)
         sess.run(tf.global_variables_initializer())
 
