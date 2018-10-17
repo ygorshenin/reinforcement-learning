@@ -7,18 +7,20 @@ from ac import AC
 from env import Env
 
 
-REWARD_DECAY = 0.99
-DISCOUNT = 0.98
+REWARD_DECAY = 0.1
+DISCOUNT = 0.99
 
 
 def train_on_episode(sess, env, ac):
     s, reward = env.reset(), 0
 
+    memory = []
+
     while True:
         a = ac.get_action(sess, s)
         s_, r, done = env.step(a)
         d = abs(r) > 1e-5
-        ac.on_reward(s, a, r, s_, d)
+        memory.append([s, a, r, s_, d])
         s = s_
 
         if d:
@@ -27,7 +29,16 @@ def train_on_episode(sess, env, ac):
                 print('Win :)')
             else:
                 print('Lose :(')
+
+            norm = max(len(memory), 1)
+            for row in reversed(memory):
+                row[2] = r / norm
+                ac.on_reward(*row)
+                r *= DISCOUNT
+
+            memory = []
             ac.train(sess, lr_policy=1e-4, lr_value=1e-4)
+            ac.clear_memory()
 
         if done:
             break

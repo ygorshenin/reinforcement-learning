@@ -42,27 +42,21 @@ class AC:
     def on_reward(self, s, a, r, s_, done):
         self.memory.append([s, a, r, s_, done])
 
-    def train(self, sess, lr_policy, lr_value):
-        batch_size = min(len(self.memory), BATCH_SIZE)
-        samples = random.sample(self.memory, batch_size)
+    def clear_memory(self):
+        self.memory.clear()
 
-        ss, as_, ss_ = [], [], []
+    def train(self, sess, lr_policy, lr_value):
+        # batch_size = min(len(self.memory), BATCH_SIZE)
+        # samples = random.sample(self.memory, batch_size)
+        samples = self.memory
+
+        ss, as_, ws = [], [], []
         for [s, a, r, s_, done] in samples:
             ss.append(s)
             as_.append(a)
-            ss_.append(s_)
+            ws.append(r)
 
-        values_pred = self.value.predict_on_batch(sess, ss)
-        values_pred_ = self.value.predict_on_batch(sess, ss_)
         as_ = np.expand_dims(as_, axis=1)
+        ws = np.expand_dims(ws, axis=1)
 
-        values, weights = np.zeros(shape=[batch_size, 1]), np.zeros(shape=[batch_size, 1])
-        for i, [s, a, r, _s, done] in enumerate(samples):
-            reward = r
-            if not done:
-                reward += self.discount * values_pred_[i][0]
-            values[i][0] = reward
-            weights[i][0] = reward - values_pred[i][0]
-
-        self.policy.train_on_batch(sess, ss, as_, weights, lr_policy)
-        self.value.train_on_batch(sess, ss, values, lr_value)
+        self.policy.train_on_batch(sess, ss, as_, ws, lr_policy)
