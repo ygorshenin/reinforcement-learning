@@ -1,8 +1,6 @@
 import tensorflow as tf
 from tensorflow.contrib.layers import xavier_initializer
 
-PROB_EPS = 1e-3
-
 
 class PolicyDQN:
     def __init__(self, **kwargs):
