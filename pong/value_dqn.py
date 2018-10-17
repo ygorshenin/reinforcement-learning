@@ -12,18 +12,15 @@ class ValueDQN:
         self.values_true = tf.placeholder(tf.float32, shape=[None, 1], name='values_true')
         self.learning_rate = tf.placeholder(tf.float32, name='learning_rate')
 
-        conv1 = tf.layers.conv2d(inputs=self.states,
-                                 filters=64,
-                                 kernel_size=8,
-                                 strides=4,
-                                 data_format='channels_first',
-                                 activation=tf.nn.tanh,
-                                 kernel_initializer=xavier_initializer())
-        h1 = tf.layers.dense(inputs=tf.layers.flatten(conv1),
-                             units=128,
+        h1 = tf.layers.dense(inputs=tf.layers.flatten(self.states),
+                             units=512,
                              activation=tf.nn.tanh,
                              kernel_initializer=xavier_initializer())
-        self.values_pred = tf.layers.dense(inputs=h1,
+        h2 = tf.layers.dense(inputs=h1,
+                             units=256,
+                             activation=tf.nn.tanh,
+                             kernel_initializer=xavier_initializer())
+        self.values_pred = tf.layers.dense(inputs=h2,
                                            units=1,
                                            kernel_initializer=xavier_initializer())
 

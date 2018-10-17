@@ -8,7 +8,7 @@ from env import Env
 
 
 REWARD_DECAY = 0.99
-DISCOUNT = 1
+DISCOUNT = 0.98
 
 
 def train_on_episode(sess, env, ac):
@@ -26,8 +26,8 @@ def train_on_episode(sess, env, ac):
             if r > 0:
                 print('Win :)')
             else:
-                print('Loss :(')
-            ac.train(sess, lr_policy=1e-3, lr_value=1e-3)
+                print('Lose :(')
+            ac.train(sess, lr_policy=1e-4, lr_value=1e-4)
 
         if done:
             break

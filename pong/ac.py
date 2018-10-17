@@ -8,8 +8,8 @@ from policy_dqn import PolicyDQN
 from value_dqn import ValueDQN
 
 
-MEMORY_SIZE = 100000
-BATCH_SIZE = 128
+MEMORY_SIZE = 200000
+BATCH_SIZE = 256
 EPS = 1e-6
 
 def clamp(value, low, high):
@@ -54,7 +54,7 @@ class AC:
 
         values_pred = self.value.predict_on_batch(sess, ss)
         values_pred_ = self.value.predict_on_batch(sess, ss_)
-        as_ = np.expand_dims(np.array(as_), axis=1)
+        as_ = np.expand_dims(as_, axis=1)
 
         values, weights = np.zeros(shape=[batch_size, 1]), np.zeros(shape=[batch_size, 1])
         for i, [s, a, r, _s, done] in enumerate(samples):
@@ -62,7 +62,7 @@ class AC:
             if not done:
                 reward += self.discount * values_pred_[i][0]
             values[i][0] = reward
-            weights[i][0] = reward - 0.5 * values_pred[i][0]
+            weights[i][0] = reward - values_pred[i][0]
 
         self.policy.train_on_batch(sess, ss, as_, weights, lr_policy)
         self.value.train_on_batch(sess, ss, values, lr_value)

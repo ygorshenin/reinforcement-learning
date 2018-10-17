@@ -43,15 +43,16 @@ class Env:
 
     @staticmethod
     def observations_shape():
-        return [1, 80, 160]
+        return [80, 160]
 
     @staticmethod
     def _normalize_frame(frame):
         frame = frame[MIN_ROW:MAX_ROW, :, 0]
+        frame[frame == 53] = 0
+        frame[frame == 109] = 0
         frame[frame == 144] = 0
         frame[frame != 0] = 1
         return frame[::2, ::2]
 
     def make_state(self):
-        state = np.hstack([self.f0, self.f1])
-        return np.expand_dims(state, axis=0)
+        return np.hstack([self.f0, self.f1])
