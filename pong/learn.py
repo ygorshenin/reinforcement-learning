@@ -3,8 +3,8 @@
 import argparse
 import tensorflow as tf
 
-from ac import PG
 from env import Env
+from pg import PG
 
 
 REWARD_DECAY = 0.1
@@ -13,7 +13,6 @@ DISCOUNT = 0.99
 
 def train_on_episode(sess, env, pg):
     s, reward = env.reset(), 0
-
     memory = []
 
     while True:
@@ -29,13 +28,14 @@ def train_on_episode(sess, env, pg):
             else:
                 print('Lose :(')
 
-            for row in reversed(memory):
-                row[1] = r
-                pg.on_reward(*row)
-                r *= DISCOUNT
+            g = 1
+            for [s_, a_] in reversed(memory):
+                r_ = r * g
+                pg.on_reward(s_, a_, r_)
+                g *= DISCOUNT
 
-            memory = []
             pg.train(sess, lr_policy=1e-4)
+            memory = []
             pg.clear_memory()
 
         if done:

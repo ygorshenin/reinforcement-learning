@@ -1,4 +1,5 @@
 import tensorflow as tf
+
 from tensorflow.contrib.layers import xavier_initializer
 
 
@@ -7,7 +8,7 @@ class PolicyDQN:
         with tf.variable_scope('policy'):
             self.__init_model__(**kwargs)
 
-    def __init_model__(self, input_shape, hidden_units=128):
+    def __init_model__(self, input_shape):
         self.states = tf.placeholder(tf.float32, [None] + list(input_shape), name='states')
         self.actions = tf.placeholder(tf.float32, [None, 1], name='actions')
         self.weights = tf.placeholder(tf.float32, [None, 1], name='weights')

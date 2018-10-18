@@ -5,44 +5,35 @@ import numpy as np
 import tensorflow as tf
 import time
 
-from ac import AC
 from env import Env
+from pg import PG
 
 
-DELAY_SEC = 0.02
-DISCOUNT = 0.98
-
-
-def visualize_episode(sess, env, ac):
+def visualize_episode(sess, env, pg):
     s = env.reset()
-    time.sleep(DELAY_SEC)
 
     while True:
-        a, p = ac.get_action_prob(sess, s)
-        s_, r, done = env.step(a)
-        v, v_ = ac.get_value(sess, s), ac.get_value(sess, s_)
-        print(a, p, r + DISCOUNT * v_ - v)
-        s = s_
-        time.sleep(DELAY_SEC)
+        a = pg.get_action(sess, s)
+        s, _, done = env.step(a)
         if done:
             break
 
 
-def visualize_episodes(sess, env, ac):
+def visualize_episodes(sess, env, pg):
     while True:
-        visualize_episode(sess, env, ac)
+        visualize_episode(sess, env, pg)
 
 
 def go(args):
     with tf.Session() as sess:
         env = Env(render=True)
-        ac = AC(discount=DISCOUNT)
+        pg = PG()
 
         saver = tf.train.Saver()
         saver.restore(sess, args.model_path)
 
-        visualize_episodes(sess, env, ac)
-            
+        visualize_episodes(sess, env, pg)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
