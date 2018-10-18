@@ -28,7 +28,7 @@ class PG:
     def clear_memory(self):
         self.memory = []
 
-    def train(self, sess, lr_policy):
+    def train(self, sess, lr_policy, beta):
         samples = self.memory
 
         ss, as_, ws = [], [], []
@@ -40,4 +40,4 @@ class PG:
         as_ = np.expand_dims(as_, axis=1)
         ws = np.expand_dims(ws, axis=1)
 
-        self.policy.train_on_batch(sess, ss, as_, ws, lr_policy)
+        self.policy.train_on_batch(sess, ss, as_, ws, lr_policy, beta)

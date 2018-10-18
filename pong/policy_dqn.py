@@ -13,6 +13,7 @@ class PolicyDQN:
         self.actions = tf.placeholder(tf.float32, [None, 1], name='actions')
         self.weights = tf.placeholder(tf.float32, [None, 1], name='weights')
         self.learning_rate = tf.placeholder(tf.float32, name='learning_rate')
+        self.beta = tf.placeholder(tf.float32, name='beta')
 
         h1 = tf.layers.dense(inputs=tf.layers.flatten(self.states),
                              units=256,
@@ -26,10 +27,15 @@ class PolicyDQN:
                                       units=1,
                                       activation=tf.sigmoid,
                                       kernel_initializer=xavier_initializer())
+        self.prob_1 = self.prob_1 * 0.9998 + 0.0001
+        prob_0 = 1 - self.prob_1
+        entropy = self.prob_1 * tf.log(1 / self.prob_1) + prob_0 * tf.log(1 / prob_0)
+        regularizer = tf.reduce_mean(entropy)
+
         loss = tf.losses.log_loss(labels=self.actions, predictions=self.prob_1, weights=self.weights)
 
         optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
-        self.train_op = optimizer.minimize(loss)
+        self.train_op = optimizer.minimize(loss - self.beta * regularizer)
 
     def predict(self, sess, state):
         return self.predict_on_batch(sess, [state])[0][0]
@@ -37,8 +43,9 @@ class PolicyDQN:
     def predict_on_batch(self, sess, states):
         return sess.run(self.prob_1, feed_dict={self.states: states})
 
-    def train_on_batch(self, sess, states, actions, weights, learning_rate):
+    def train_on_batch(self, sess, states, actions, weights, learning_rate, beta):
         return sess.run(self.train_op, feed_dict={self.states: states,
                                                   self.actions: actions,
                                                   self.weights: weights,
-                                                  self.learning_rate: learning_rate})
+                                                  self.learning_rate: learning_rate,
+                                                  self.beta: beta})
