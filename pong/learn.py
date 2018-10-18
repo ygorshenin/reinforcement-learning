@@ -17,9 +17,10 @@ def train_on_episode(sess, env, pg):
 
     while True:
         a = pg.get_action(sess, s)
-        s, r, done = env.step(a)
+        s_, r, done = env.step(a)
         d = abs(r) > 1e-5
         memory.append([s, a])
+        s = s_
 
         if d:
             reward += r
@@ -62,7 +63,7 @@ def train_on_episodes(args):
         if args.restore:
             saver.restore(sess, args.model_path)
 
-        reward, episode = 0, 0
+        reward, episode = -21, 0
 
         while True:
             episode += 1
