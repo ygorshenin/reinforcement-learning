@@ -7,12 +7,11 @@ from env import Env
 from pg import PG
 
 
-REWARD_DECAY = 0.1
 DISCOUNT = 0.99
 
 
-def train_on_episode(sess, env, pg):
-    s, reward = env.reset(), 0
+def train_on_episode(sess, env, episode, pg, writer):
+    s, reward, steps = env.reset(), 0, 0
     memory = []
 
     while True:
@@ -21,13 +20,14 @@ def train_on_episode(sess, env, pg):
         d = abs(r) > 1e-5
         memory.append([s, a])
         s = s_
+        steps += 1
 
         if d:
+            summary = tf.Summary()
+            summary.value.add(tag='reward', simple_value=r)
+            summary.value.add(tag='steps', simple_value=steps)
+            writer.add_summary(summary, episode)
             reward += r
-            if r > 0:
-                print('Win :)')
-            else:
-                print('Lose :(')
 
             g = 1
             for [s_, a_] in reversed(memory):
@@ -35,9 +35,10 @@ def train_on_episode(sess, env, pg):
                 pg.on_reward(s_, a_, r_)
                 g *= DISCOUNT
 
-            pg.train(sess, lr_policy=1e-4, beta=0.01)
+            pg.train(sess, lr_policy=1e-4, beta=0.001)
             memory = []
             pg.clear_memory()
+            steps = 0
 
         if done:
             break
@@ -63,17 +64,18 @@ def train_on_episodes(args):
         if args.restore:
             saver.restore(sess, args.model_path)
 
-        reward, episode = -21, 0
+        episode = 0
 
         while True:
             episode += 1
-            r = train_on_episode(sess, env, pg)
-            reward += (r - reward) * REWARD_DECAY
-
-            summary = tf.Summary(value=[tf.Summary.Value(tag='running mean', simple_value=reward)])
-            writer.add_summary(summary)
+            reward = train_on_episode(sess, env, episode, pg, writer)
 
             print('Episode:', episode, 'reward:', reward)
+
+            summary = tf.Summary()
+            summary.value.add(tag='episode reward', simple_value=reward)
+            writer.add_summary(summary, episode)
+
             saver.save(sess, args.model_path)
 
 
