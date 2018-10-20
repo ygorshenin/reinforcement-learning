@@ -1,16 +1,6 @@
 import gym
 import numpy as np
-
-
-MAX_FRAMES = 2
-
-MIN_ROW = 34
-MAX_ROW = 193
-NROWS = MAX_ROW - MIN_ROW
-
-MIN_COL = 0
-MAX_COL = 160
-NCOLS = MAX_COL - MIN_COL
+import time
 
 
 class Env:
@@ -23,38 +13,35 @@ class Env:
         frame = Env._normalize_frame(frame)
         if self.render:
             self.env.render()
+            time.sleep(0.02)
 
         self.f0, self.f1 = frame, frame
-        state = self._make_state()
-        return state
+        return self.make_state()
 
     def step(self, action):
         frame, reward, done, _ = self.env.step(2 + action)
         frame = Env._normalize_frame(frame)
 
         self.f0, self.f1 = self.f1, frame
-        state = self._make_state()
+        state = self.make_state()
 
         if self.render:
             self.env.render()
+            time.sleep(0.02)
         return state, reward, done
 
     @staticmethod
-    def actions_dim():
-        return 2
-
-    @staticmethod
     def observations_shape():
-        return (1, 80, 160)
+        return [80, 160]
 
     @staticmethod
     def _normalize_frame(frame):
-        frame = frame[MIN_ROW:MAX_ROW, :, 0]
+        frame = frame[34:193, :, 0]
+        frame[frame == 53] = 0
+        frame[frame == 109] = 0
         frame[frame == 144] = 0
         frame[frame != 0] = 1
         return frame[::2, ::2]
 
-    def _make_state(self):
-        self.state = np.hstack([self.f0, self.f1])
-        self.state = np.expand_dims(self.state, axis=0)
-        return self.state
+    def make_state(self):
+        return np.hstack([self.f0, self.f1])

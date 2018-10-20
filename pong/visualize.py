@@ -7,41 +7,34 @@ import time
 
 from agent import Agent
 from env import Env
-from dqn import DQN
+from pg import PG
 
 
-DELAY_SEC = 0.02
-
-
-def visualize_episode(sess, env, agent):
+def visualize_episode(sess, env, pg):
     s = env.reset()
-    time.sleep(DELAY_SEC)
 
     while True:
-        a = agent.get_action(sess, s)
+        a = pg.get_action(sess, s)
         s, _, done = env.step(a)
-        time.sleep(DELAY_SEC)
         if done:
             break
 
 
-def visualize_episodes(sess, env, agent):
+def visualize_episodes(sess, env, pg):
     while True:
-        visualize_episode(sess, env, agent)
+        visualize_episode(sess, env, pg)
 
 
 def go(args):
     with tf.Session() as sess:
-        dqn = DQN(input_shape=Env.observations_shape())
-        agent = Agent(dqn)
+        env = Env(render=True)
+        pg = PG()
 
         saver = tf.train.Saver()
         saver.restore(sess, args.model_path)
 
-        env = Env(render=True)
+        visualize_episodes(sess, env, pg)
 
-        visualize_episodes(sess, env, agent)
-            
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
