@@ -20,19 +20,18 @@ class Env:
 
     def step(self, action):
         frame, reward, done, _ = self.env.step(2 + action)
-        frame = Env._normalize_frame(frame)
-
-        self.f0, self.f1 = self.f1, frame
-        state = self.make_state()
-
         if self.render:
             self.env.render()
             time.sleep(0.02)
-        return state, reward, done
+
+        frame = Env._normalize_frame(frame)
+        self.f0, self.f1 = self.f1, frame
+
+        return self.make_state(), reward, done
 
     @staticmethod
     def observations_shape():
-        return [80, 160]
+        return [1, 80, 160]
 
     @staticmethod
     def _normalize_frame(frame):
@@ -44,4 +43,4 @@ class Env:
         return frame[::2, ::2]
 
     def make_state(self):
-        return np.hstack([self.f0, self.f1])
+        return np.expand_dims(np.hstack([self.f0, self.f1]), axis=0)

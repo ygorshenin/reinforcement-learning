@@ -35,7 +35,7 @@ def train_on_episode(sess, env, episode, pg, writer):
                 pg.on_reward(s_, a_, r_)
                 g *= DISCOUNT
 
-            pg.train(sess, lr_policy=1e-4, beta=0.001)
+            pg.train(sess, lr_policy=1e-4, beta=0.01)
             memory = []
             pg.clear_memory()
             steps = 0

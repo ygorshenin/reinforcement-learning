@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from tensorflow.contrib.layers import xavier_initializer
+from tensorflow.contrib.layers import xavier_initializer, xavier_initializer_conv2d
 
 
 class PolicyDQN:
@@ -15,15 +15,18 @@ class PolicyDQN:
         self.learning_rate = tf.placeholder(tf.float32, name='learning_rate')
         self.beta = tf.placeholder(tf.float32, name='beta')
 
-        h1 = tf.layers.dense(inputs=tf.layers.flatten(self.states),
-                             units=256,
-                             activation=tf.nn.tanh,
-                             kernel_initializer=xavier_initializer())
-        h2 = tf.layers.dense(inputs=h1,
+        conv1 = tf.layers.conv2d(inputs=self.states,
+                                 filters=64,
+                                 kernel_size=8,
+                                 strides=4,
+                                 data_format='channels_first',
+                                 activation=tf.nn.tanh,
+                                 kernel_initializer=xavier_initializer_conv2d())
+        h1 = tf.layers.dense(inputs=tf.layers.flatten(conv1),
                              units=128,
                              activation=tf.nn.tanh,
                              kernel_initializer=xavier_initializer())
-        self.prob_1 = tf.layers.dense(inputs=h2,
+        self.prob_1 = tf.layers.dense(inputs=h1,
                                       units=1,
                                       activation=tf.sigmoid,
                                       kernel_initializer=xavier_initializer())
